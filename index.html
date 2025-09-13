@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Carbon Registry</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4; /* Green-100 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full">
+        <div class="flex items-center space-x-4 mb-6">
+            <svg class="w-10 h-10 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-16c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zM9.5 13.5l-3-3h6l3 3z"></path>
+            </svg>
+            <h1 class="text-4xl font-bold text-gray-800">Blue Carbon Registry</h1>
+        </div>
+        <p class="text-gray-600 mb-8">This prototype demonstrates the key functions of a blockchain-based blue carbon registry and MRV system.</p>
+
+        <!-- Tabs for different functions -->
+        <div class="flex space-x-2 border-b border-gray-200 mb-6">
+            <button id="tab-register" class="py-2 px-4 rounded-t-lg text-sm font-medium focus:outline-none transition-colors duration-200">Register Project</button>
+            <button id="tab-data" class="py-2 px-4 rounded-t-lg text-sm font-medium focus:outline-none transition-colors duration-200">Add Data</button>
+            <button id="tab-credits" class="py-2 px-4 rounded-t-lg text-sm font-medium focus:outline-none transition-colors duration-200">Issue Credits</button>
+        </div>
+
+        <!-- Content for each tab -->
+        <div id="content-register" class="tab-content">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Register a New Project</h2>
+            <div class="space-y-4">
+                <input type="text" id="project-name" placeholder="Project Name (e.g., Mangrove Restoration Project)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 transition-colors duration-200">
+                <input type="text" id="project-owner" placeholder="Project Owner Address (e.g., 0x...)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 transition-colors duration-200">
+                <button onclick="registerProject()" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-teal-700 transition-colors duration-200">
+                    Register Project
+                </button>
+            </div>
+        </div>
+
+        <div id="content-data" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Add Carbon Data</h2>
+            <div class="space-y-4">
+                <input type="text" id="data-project-id" placeholder="Project ID" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 transition-colors duration-200">
+                <input type="number" id="carbon-tons" placeholder="CO2 Sequestered (in tons)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 transition-colors duration-200">
+                <button onclick="addCarbonData()" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-teal-700 transition-colors duration-200">
+                    Add Data to Blockchain
+                </button>
+            </div>
+        </div>
+
+        <div id="content-credits" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Issue Carbon Credits</h2>
+            <div class="space-y-4">
+                <input type="text" id="credit-project-id" placeholder="Project ID" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 transition-colors duration-200">
+                <button onclick="issueCredits()" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-teal-700 transition-colors duration-200">
+                    Issue Credits
+                </button>
+            </div>
+        </div>
+
+        <!-- Result/Status Display -->
+        <div id="status-message" class="mt-8 p-4 rounded-lg text-center font-medium" role="alert"></div>
+    </div>
+
+    <script>
+        // --- Core Project Logic (Simulated Blockchain) ---
+
+        // This is a simplified "blockchain" ledger for demonstration.
+        // In a real project, this would be a smart contract on a live network.
+        const ledger = {
+            projects: {},
+            data: {},
+            credits: {}
+        };
+
+        function showMessage(message, type = 'info') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = 'mt-8 p-4 rounded-lg text-center font-medium';
+            if (type === 'success') {
+                statusDiv.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                statusDiv.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                statusDiv.classList.add('bg-blue-100', 'text-blue-800');
+            }
+        }
+
+        // --- Step 1: Register Project ---
+        function registerProject() {
+            const name = document.getElementById('project-name').value.trim();
+            const owner = document.getElementById('project-owner').value.trim();
+            const projectId = generateId(name);
+
+            if (!name || !owner) {
+                showMessage("Error: Please fill in all fields.", 'error');
+                return;
+            }
+
+            // Simulate a new "transaction" on the blockchain
+            ledger.projects[projectId] = {
+                name: name,
+                owner: owner,
+                carbonData: [],
+                creditsIssued: 0,
+                timestamp: Date.now()
+            };
+
+            showMessage(`Success! Project "${name}" registered with ID: ${projectId}.`, 'success');
+            console.log("Current Ledger State:", ledger);
+        }
+
+        // --- Step 2: Add Carbon Data ---
+        function addCarbonData() {
+            const projectId = document.getElementById('data-project-id').value.trim();
+            const carbonTons = parseFloat(document.getElementById('carbon-tons').value);
+
+            if (!ledger.projects[projectId]) {
+                showMessage("Error: Project ID not found. Please register the project first.", 'error');
+                return;
+            }
+            if (isNaN(carbonTons) || carbonTons <= 0) {
+                showMessage("Error: Please enter a valid amount of carbon.", 'error');
+                return;
+            }
+
+            // Simulate adding a new data point to the blockchain
+            ledger.projects[projectId].carbonData.push({
+                amount: carbonTons,
+                timestamp: Date.now()
+            });
+
+            showMessage(`Success! ${carbonTons} tons of CO2 added to project ${projectId}.`, 'success');
+            console.log("Current Ledger State:", ledger);
+        }
+
+        // --- Step 3: Issue Credits ---
+        function issueCredits() {
+            const projectId = document.getElementById('credit-project-id').value.trim();
+            
+            if (!ledger.projects[projectId]) {
+                showMessage("Error: Project ID not found.", 'error');
+                return;
+            }
+
+            const project = ledger.projects[projectId];
+            const totalCarbon = project.carbonData.reduce((sum, data) => sum + data.amount, 0);
+            const newCredits = totalCarbon - project.creditsIssued;
+
+            if (newCredits <= 0) {
+                showMessage("No new carbon data to convert into credits.", 'error');
+                return;
+            }
+
+            // The smart contract would automatically verify and issue tokens
+            project.creditsIssued += newCredits;
+
+            showMessage(`Success! ${newCredits} new carbon credits issued for project ${projectId}. Total credits: ${project.creditsIssued}.`, 'success');
+            console.log("Current Ledger State:", ledger);
+        }
+
+        // --- Utility Function to generate a simple ID ---
+        function generateId(str) {
+            return str.replace(/\s/g, '').toLowerCase() + Math.random().toString(36).substr(2, 5);
+        }
+
+        // --- UI Logic for Tabs ---
+        const tabs = document.querySelectorAll('.py-2');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Deactivate all tabs and hide all content
+                tabs.forEach(t => {
+                    t.classList.remove('border-teal-500', 'text-teal-600', 'border-b-2');
+                    t.classList.add('text-gray-500');
+                });
+                contents.forEach(c => c.classList.add('hidden'));
+
+                // Activate the selected tab and show its content
+                tab.classList.add('border-teal-500', 'text-teal-600', 'border-b-2');
+                tab.classList.remove('text-gray-500');
+                const contentId = `content-${tab.id.split('-')[1]}`;
+                document.getElementById(contentId).classList.remove('hidden');
+                showMessage(''); // Clear message when switching tabs
+            });
+        });
+
+        // Initial tab activation
+        document.getElementById('tab-register').click();
+    </script>
+</body>
+</html>
